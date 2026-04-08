@@ -1,0 +1,3 @@
+/home/jinzheyu/graduate_design/build/CMakeFiles/xdoj.dir
+/home/jinzheyu/graduate_design/build/CMakeFiles/edit_cache.dir
+/home/jinzheyu/graduate_design/build/CMakeFiles/rebuild_cache.dir
