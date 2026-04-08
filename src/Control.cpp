@@ -13,11 +13,15 @@ using namespace std;
 
 Control::Control()
 {
+    // 初始化题目标签
+    Tag::GetInstance()->InitProblemTags();
 }
 
 Control::~Control()
 {
 }
+
+//用户模块
 Json::Value Control::RegisterUser(Json::Value &registerjson)
 {
     return UserList::GetInstance()->RegisterUser(registerjson);
@@ -56,4 +60,53 @@ Json::Value Control::SelectUserSetInfo(Json::Value &queryjson)
 Json::Value Control::DeleteUser(Json::Value &deletejson)
 {
     return UserList::GetInstance()->DeleteUser(deletejson);
+}
+
+//题目模块
+Json::Value Control::SelectProblemInfoByAdmin(Json::Value &queryjson)
+{
+    return ProblemList::GetInstance()->SelectProblemInfoByAdmin(queryjson);
+}
+
+Json::Value Control::SelectProblem(Json::Value &queryjson)
+{
+    return ProblemList::GetInstance()->SelectProblem(queryjson);
+}
+
+Json::Value Control::EditProblem(Json::Value &insertjson)
+{
+    Json::Value resjson;
+    if (insertjson["EditType"].asString() == "Insert")
+    {
+        resjson = ProblemList::GetInstance()->InsertProblem(insertjson);
+    }
+    else if (insertjson["EditType"].asString() == "Update")
+    {
+        resjson = ProblemList::GetInstance()->UpdateProblem(insertjson);
+    }
+    //每次插入或者更新题目后更新当前所有题目的标签
+    Tag::GetInstance()->InitProblemTags();
+    return resjson;
+}
+Json::Value Control::DeleteProblem(Json::Value &deletejson)
+{
+    return ProblemList::GetInstance()->DeleteProblem(deletejson);
+}
+
+Json::Value Control::SelectProblemList(Json::Value &queryjson)
+{
+    return ProblemList::GetInstance()->SelectProblemList(queryjson);
+}
+
+Json::Value Control::SelectProblemListByAdmin(Json::Value &queryjson)
+{
+    return ProblemList::GetInstance()->SelectProblemListByAdmin(queryjson);
+}
+
+Json::Value Control::GetTags(Json::Value &queryjson)
+{
+    if (queryjson["TagType"].asString() == "Problem")
+    {
+        return Tag::GetInstance()->getProblemTags();
+    }
 }
