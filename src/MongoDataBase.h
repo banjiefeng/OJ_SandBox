@@ -144,6 +144,235 @@ public:
     */
     Json::Value getProblemTags();
 
+    // +++++++++++++++++++++++++Announcement 公告表++++++++++++++++++++++++++++
+
+    /*
+        功能：添加公告
+        传入：Json(Title,Content,UserId,Level)
+        传出：Json(Result,Reason)
+    */
+    Json::Value InsertAnnouncement(Json::Value &insertjson);
+
+    /*
+        功能：分页查询公告
+        传入：Json(Page,PageSize)
+        传出：Json([Result,Reason,_id,Title,Views,Comments,CreateTime],TotalNum)
+    */
+    Json::Value SelectAnnouncementList(Json::Value &queryjson);
+
+    /*
+        功能：查询公告的详细信息，主要是编辑时的查询
+        传入：Json(AnnouncementId)
+        传出：Json(Result,Reason,Title,Content,Level)
+    */
+    Json::Value SelectAnnouncementByEdit(Json::Value &queryjson);
+
+    /*
+        功能：查询公告的详细内容，并且将其浏览量加一
+        传入：Json(AnnouncementId)
+        传出：Json(Title,Content,Views,Comments,CreateTime,UpdateTime)
+    */
+    Json::Value SelectAnnouncement(Json::Value &queryjson);
+
+    /*
+        功能：修改公告的评论数
+        传入：Json(ArticleId,Num)
+        传出：bool
+    */
+    bool UpdateAnnouncementComments(Json::Value &updatejson);
+
+    /*
+        功能：更新公告
+        传入：Json(AnnouncementId,Title,Content,Level)
+        传出；Json(Result,Reason)
+    */
+    Json::Value UpdateAnnouncement(Json::Value &updatejson);
+
+    /*
+        功能：删除公告
+        传入：Json(AnnouncementId)
+        传出：Json(Result,Reason)
+    */
+    Json::Value DeleteAnnouncement(Json::Value &deletejson);
+
+
+    // +++++++++++++++++++++++++Disscuss 讨论表++++++++++++++++++++++++++++
+    
+    /*
+        功能：添加讨论
+        传入：Json(Title,Content,ParentId,UserId) 如果是父讨论ParentId=0
+        传出：Json(Result)
+    */
+    Json::Value InsertDiscuss(Json::Value &insertjson);
+
+    /*
+        功能：分页查询讨论
+        传入：Json(SearchInfo,Page,PageSize)
+        传出：Json(_id,Title,Views,Comments,CreateTime,User.Avatar,User.NickName)
+    */
+    Json::Value SelectDiscussList(Json::Value &queryjson);
+
+    /*
+        功能：管理员分页查询讨论
+        传入：Json(Page,PageSize)
+        传出：Json(_id,Title,Views,Comments,CreateTime,User.Avatar,User.NickName)
+    */
+    Json::Value SelectDiscussListByAdmin(Json::Value &queryjson);
+
+    /*
+        功能：查询讨论的详细信息，主要是编辑时的查询
+        传入：Json(DiscussId)
+        传出：Json(Result,Reason,Title,Content)
+    */
+    Json::Value SelectDiscussByEdit(Json::Value &queryjson);
+
+    /*
+        功能：查询讨论的详细内容，并且将其浏览量加一
+        传入：Json(DiscussId)
+        传出：Json(Resutl,Reason,Content,Views,Comments,CreateTime,UpdateTime,User.NickName,User.Avatar)
+    */
+    Json::Value SelectDiscuss(Json::Value &queryjson);
+
+    /*
+        功能：修改讨论的评论数
+        传入：Json(DiscussId,Num)
+        传出：bool
+    */
+    bool UpdateDiscussComments(Json::Value &updatejson);
+
+    /*
+        功能：更新讨论
+        传入：Json(DiscussId,Title,Content)
+        传出；Json(Result,Reason)
+    */
+    Json::Value UpdateDiscuss(Json::Value &updatejson);
+
+    /*
+        功能：删除讨论
+        传入：Json(DiscussId)
+        传出：Json(Result,Reason)
+    */
+    Json::Value DeleteDiscuss(Json::Value &deletejson);
+
+    // +++++++++++++++++++++++++Solution 题解表++++++++++++++++++++++++++++
+
+    /*
+        功能：添加题解
+        传入：Json(Title,Content,ParentId,UserId,Public)
+        传出：Json(Result,Reason)
+    */
+    Json::Value InsertSolution(Json::Value &insertjson);
+
+    /*
+        功能：分页查询题解（公开题解）
+        传入：Json(SearchInfo,Page,PageSize)
+        传出：Json(_id,Title,Views,Comments,CreateTime,User.Avatar,User.NickName)
+    */
+    Json::Value SelectSolutionList(Json::Value &queryjson);
+
+    /*
+        功能：管理员分页查询题解
+        传入：Json(Page,PageSize)
+        传出：Json(_id,Title,Views,Comments,CreateTime,User.Avatar,User.NickName)
+    */
+    Json::Value SelectSolutionListByAdmin(Json::Value &queryjson);
+
+    /*
+        功能：查询题解的详细信息，主要是编辑时的查询
+        传入：Json(SolutionId)
+        传出：Json(Result,Reason,Title,Content,Public)
+    */
+    Json::Value SelectSolutionByEdit(Json::Value &queryjson);
+
+    /*
+        功能：查询题解的详细内容，并且将其浏览量加一
+        传入：Json(SolutionId)
+        传出：Json(Result,Reason,Title,Content,Views,Comments,CreateTime,UpdateTime,User.NicaName,User.Avatar)
+    */
+    Json::Value SelectSolution(Json::Value &queryjson);
+
+    /*
+        功能：修改题解的评论数
+        传入：Json(ArticleId,Num)
+        传出：bool
+    */
+    bool UpdateSolutionComments(Json::Value &updatejson);
+
+    /*
+        功能：更新题解
+        传入：Json(SolutionId,Title,Content,Public)
+        传出；Json(Result,Reason)
+    */
+    Json::Value UpdateSolution(Json::Value &updatejson);
+
+    /*
+        功能：删除题解
+        传入：Json(ArticleId)
+        传出：Json(Result,Reason)
+    */
+    Json::Value DeleteSolution(Json::Value &deletejson);
+
+        // ++++++++++++++++++++++评论表 Comment+++++++++++++++++++++++
+
+    /*
+        功能：管理员查询评论
+        传入：Json(Page,PageSize)
+        传出：Json(_id,ParentId,ParentType,Content,CreateTime,
+            Child_Comments._id,Child_Comments.Content,Child_Comments.CreateTime)
+    */
+    Json::Value SelectCommentListByAdmin(Json::Value &queryjson);
+    /*
+        功能：查询父评论
+        传入：Json(ParentId,Skip,Limie,SonNum)
+        传出：
+        Json(ParentId,Content,Likes,CreateTime,Child_Total,
+        User(Avatar,NickName),
+        Child_Comments(_id,Content,Likes,CreateTime,User(Avatar,NickName)))
+    */
+    Json::Value getFatherComment(Json::Value &queryjson);
+
+    /*
+        功能：获取子评论
+        传入：Json(ParentId,Skip,Limit)
+        传出：Json(Child_Total,Child_Comments(_id,Content,Likes,CreateTime,User(NickName,Avatar)))
+    */
+    Json::Value getSonComment(Json::Value &queryjson);
+
+    /*
+        功能：插入父评论
+        传入：Json(ParentId,Content,UserId)
+        传出：Json(_id,CreateTime)
+    */
+    Json::Value InsertFatherComment(Json::Value &insertjson);
+
+    /*
+        功能：插入子评论
+        传入：Json(ParentId,Content,UserId)
+        传出：Json(_id,CreateTime)
+    */
+    Json::Value InsertSonComment(Json::Value &insertjson);
+
+    /*
+        功能：删除某一篇文章（讨论，题解，公告）的所有文章，主要服务于删除文章
+        传入：Json(ArticleId)
+        传出：bool
+    */
+    bool DeleteArticleComment(Json::Value &deletejson);
+
+    /*
+        功能：删除父评论
+        传入：Json(CommentId)
+        传出：Json(Result,Reason,DeleteNum)
+    */
+    Json::Value DeleteFatherComment(Json::Value &deletejson);
+
+    /*
+        功能：删除子评论
+        传入：Json(CommentId)
+        传出：Json(Result,Reason,DeleteNum)
+    */
+    Json::Value DeleteSonComment(Json::Value &deletejson);
+
 private:
     /*
         功能：获取某一个集合中最大的ID
@@ -162,6 +391,8 @@ private:
     std::atomic_int64_t m_problemid;      // 题目ID
     std::atomic_int64_t m_statusrecordid; // 测评ID
     std::atomic_int64_t m_commentid;      // 评论ID
+    
+    //将讨论、公告、题解模块使用统一的文章id方便进行评论的统一管理
     std::atomic_int64_t m_articleid;      // 文章ID
 };
 

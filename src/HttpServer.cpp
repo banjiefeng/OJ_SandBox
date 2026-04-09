@@ -12,7 +12,7 @@ Control control;
 
 void doGetImage(const httplib::Request &req, httplib::Response &res)
 {
-    printf("doGetImage start!!!\n");
+    // printf("doGetImage start!!!\n");
     int index = stoi(req.matches[1]);
     string path = "../WWW/image/avatar" + to_string(index) + ".webp";
     ifstream infile;
@@ -24,7 +24,7 @@ void doGetImage(const httplib::Request &req, httplib::Response &res)
     }
     string image((istreambuf_iterator<char>(infile)),
                  (istreambuf_iterator<char>()));
-    printf("doGetImage end!!!\n");
+    // printf("doGetImage end!!!\n");
     res.set_content(image, "webp");
 }
 
@@ -218,7 +218,7 @@ void doDeleteUser(const httplib::Request &req, httplib::Response &res)
 // 返回网页请求的题目描述
 void doGetProblem(const httplib::Request &req, httplib::Response &res)
 {
-    printf("doGetProblem start!!!\n");
+    // printf("doGetProblem start!!!\n");
     Json::Value resjson;
     if (!req.has_param("ProblemId"))
     {
@@ -232,7 +232,7 @@ void doGetProblem(const httplib::Request &req, httplib::Response &res)
         queryjson["ProblemId"] = problemid;
         resjson = control.SelectProblem(queryjson);
     }
-    printf("doGetProblem end!!!\n");
+    // printf("doGetProblem end!!!\n");
     SetResponseStatus(resjson, res);
     res.set_content(resjson.toStyledString(), "json");
 }
@@ -240,7 +240,7 @@ void doGetProblem(const httplib::Request &req, httplib::Response &res)
 // 返回题库
 void doGetProblemList(const httplib::Request &req, httplib::Response &res)
 {
-    printf("doGetProblemList start!!!\n");
+    // printf("doGetProblemList start!!!\n");
 
     Json::Value resjson;
     if (!req.has_param("SearchInfo") || !req.has_param("Page") || !req.has_param("PageSize"))
@@ -263,14 +263,14 @@ void doGetProblemList(const httplib::Request &req, httplib::Response &res)
         queryjson["PageSize"] = pagesize;
         resjson = control.SelectProblemList(queryjson);
     }
-    printf("doGetProblemList end!!!\n");
+    // printf("doGetProblemList end!!!\n");
     SetResponseStatus(resjson, res);
     res.set_content(resjson.toStyledString(), "json");
 }
 // 返回管理员的题库
 void doGetProblemListByAdmin(const httplib::Request &req, httplib::Response &res)
 {
-    printf("doGetProblemListByAdmin start!!!\n");
+    // printf("doGetProblemListByAdmin start!!!\n");
     Json::Value resjson;
     if (!req.has_param("Page") || !req.has_param("PageSize"))
     {
@@ -286,7 +286,7 @@ void doGetProblemListByAdmin(const httplib::Request &req, httplib::Response &res
         queryjson["PageSize"] = pagesize;
         resjson = control.SelectProblemListByAdmin(queryjson);
     }
-    printf("doGetProblemListByAdmin end!!!\n");
+    // printf("doGetProblemListByAdmin end!!!\n");
     SetResponseStatus(resjson, res);
     res.set_content(resjson.toStyledString(), "json");
 }
@@ -294,7 +294,7 @@ void doGetProblemListByAdmin(const httplib::Request &req, httplib::Response &res
 // 返回网页请求的题目描述
 void doGetProblemInfo(const httplib::Request &req, httplib::Response &res)
 {
-    printf("doGetProblemInfo start!!!\n");
+    // printf("doGetProblemInfo start!!!\n");
     Json::Value resjson;
 
     if (!req.has_param("ProblemId"))
@@ -310,27 +310,27 @@ void doGetProblemInfo(const httplib::Request &req, httplib::Response &res)
         queryjson["ProblemId"] = problemid;
         resjson = control.SelectProblemInfoByAdmin(queryjson);
     }
-    printf("doGetProblemInfo end!!!\n");
+    // printf("doGetProblemInfo end!!!\n");
     SetResponseStatus(resjson, res);
     res.set_content(resjson.toStyledString(), "json");
 }
 
 void doEditProblem(const httplib::Request &req, httplib::Response &res)
 {
-    printf("doEditProblem start!!!\n");
+    // printf("doEditProblem start!!!\n");
     Json::Value jsonvalue;
     Json::Reader reader;
     // 解析传入的json
     reader.parse(req.body, jsonvalue);
     Json::Value resjson = control.EditProblem(jsonvalue["datainfo"]);
-    printf("doEditProblem end!!!\n");
+    // printf("doEditProblem end!!!\n");
     SetResponseStatus(resjson, res);
     res.set_content(resjson.toStyledString(), "json");
 }
 
 void doDeleteProblem(const httplib::Request &req, httplib::Response &res)
 {
-    printf("doDeleteProblem start!!!\n");
+    // printf("doDeleteProblem start!!!\n");
     Json::Value resjson;
     if (!req.has_param("ProblemId"))
     {
@@ -345,20 +345,548 @@ void doDeleteProblem(const httplib::Request &req, httplib::Response &res)
         deletejson["ProblemId"] = problemid;
         resjson = control.DeleteProblem(deletejson);
     }
-    printf("doDeleteProblem end!!!\n");
+    // printf("doDeleteProblem end!!!\n");
     SetResponseStatus(resjson, res);
     res.set_content(resjson.toStyledString(), "json");
 }
 
 void doGetTags(const httplib::Request &req, httplib::Response &res)
 {
-    printf("doGetTags start!!!\n");
+    // printf("doGetTags start!!!\n");
     Json::Value queryjson;
     string tagtype = req.get_param_value("TagType");
     queryjson["TagType"] = tagtype;
 
     Json::Value resjson = control.GetTags(queryjson);
-    printf("doGetTags end!!!\n");
+    // printf("doGetTags end!!!\n");
+    res.set_content(resjson.toStyledString(), "json");
+}
+
+// ------------------公告------------------------------
+void doGetAnnouncementList(const httplib::Request &req, httplib::Response &res)
+{
+    // printf("doGetAnnouncementList start!!!\n");
+
+    Json::Value resjson;
+    if (!req.has_param("Page") || !req.has_param("PageSize"))
+    {
+        resjson["Result"] = "400";
+        resjson["Reason"] = "缺少请求参数！";
+    }
+    else
+    {
+        string page = req.get_param_value("Page");
+        string pagesize = req.get_param_value("PageSize");
+
+        Json::Value queryjson;
+        queryjson["Page"] = page;
+        queryjson["PageSize"] = pagesize;
+        resjson = control.SelectAnnouncementList(queryjson);
+    }
+
+    // printf("doGetAnnouncementList end!!!\n");
+    SetResponseStatus(resjson, res);
+    res.set_content(resjson.toStyledString(), "json");
+}
+
+void doGetAnnouncementListByAdmin(const httplib::Request &req, httplib::Response &res)
+{
+    // printf("doGetAnnouncementListByAdmin start!!!\n");
+
+    Json::Value resjson;
+    if (!req.has_param("Page") || !req.has_param("PageSize"))
+    {
+        resjson["Result"] = "400";
+        resjson["Reason"] = "缺少请求参数！";
+    }
+    else
+    {
+        string page = req.get_param_value("Page");
+        string pagesize = req.get_param_value("PageSize");
+
+        Json::Value queryjson;
+        queryjson["Page"] = page;
+        queryjson["PageSize"] = pagesize;
+        resjson = control.SelectAnnouncementListByAdmin(queryjson);
+    }
+
+    // printf("doGetAnnouncementListByAdmin end!!!\n");
+    SetResponseStatus(resjson, res);
+    res.set_content(resjson.toStyledString(), "json");
+}
+
+void doGetAnnouncement(const httplib::Request &req, httplib::Response &res)
+{
+    // printf("doGetAnnouncement start!!!\n");
+    Json::Value resjson;
+
+    if (!req.has_param("AnnouncementId"))
+    {
+        resjson["Result"] = "400";
+        resjson["Reason"] = "缺少请求参数！";
+    }
+    else
+    {
+        string announcementid = req.get_param_value("AnnouncementId");
+        Json::Value queryjson;
+        queryjson["AnnouncementId"] = announcementid;
+        resjson = control.SelectAnnouncement(queryjson);
+    }
+    // printf("doGetAnnouncement end!!!\n");
+    SetResponseStatus(resjson, res);
+    res.set_content(resjson.toStyledString(), "json");
+}
+
+void doSelectAnnouncement(const httplib::Request &req, httplib::Response &res)
+{
+    // printf("doSelectAnnouncement start!!!\n");
+
+    Json::Value resjson;
+    if (!req.has_param("AnnouncementId"))
+    {
+        resjson["Result"] = "400";
+        resjson["Reason"] = "缺少请求参数！";
+    }
+    else
+    {
+        string announcementid = req.get_param_value("AnnouncementId");
+
+        Json::Value queryjson;
+        queryjson["AnnouncementId"] = announcementid;
+        resjson = control.SelectAnnouncementByEdit(queryjson);
+    }
+    // printf("doSelectAnnouncement end!!!\n");
+    SetResponseStatus(resjson, res);
+    res.set_content(resjson.toStyledString(), "json");
+}
+
+void doInsertAnnouncement(const httplib::Request &req, httplib::Response &res)
+{
+    // printf("doInsertAnnouncement start!!!\n");
+    Json::Value jsonvalue;
+    Json::Reader reader;
+    // 解析传入的json
+    reader.parse(req.body, jsonvalue);
+    Json::Value resjson = control.InsertAnnouncement(jsonvalue);
+    // printf("doInsertAnnouncement end!!!\n");
+    SetResponseStatus(resjson, res);
+    res.set_content(resjson.toStyledString(), "json");
+}
+
+void doUpdateAnnouncement(const httplib::Request &req, httplib::Response &res)
+{
+    // printf("doUpdateAnnouncement start!!!\n");
+    Json::Value jsonvalue;
+    Json::Reader reader;
+    // 解析传入的json
+    reader.parse(req.body, jsonvalue);
+    Json::Value resjson = control.UpdateAnnouncement(jsonvalue);
+    // printf("doUpdateAnnouncement end!!!\n");
+    SetResponseStatus(resjson, res);
+    res.set_content(resjson.toStyledString(), "json");
+}
+
+void doDeleteAnnouncement(const httplib::Request &req, httplib::Response &res)
+{
+    // printf("doDeleteAnnouncement start!!!\n");
+    Json::Value resjson;
+
+    if (!req.has_param("AnnouncementId"))
+    {
+        resjson["Result"] = "400";
+        resjson["Reason"] = "缺少请求参数！";
+    }
+    else
+    {
+        string announcementid = req.get_param_value("AnnouncementId");
+        Json::Value deletejson;
+        deletejson["AnnouncementId"] = announcementid;
+        resjson = control.DeleteAnnouncement(deletejson);
+    }
+    // printf("doDeleteAnnouncement end!!!\n");
+    SetResponseStatus(resjson, res);
+    res.set_content(resjson.toStyledString(), "json");
+}
+
+// ------------------讨论------------------------------
+void doGetDiscussList(const httplib::Request &req, httplib::Response &res)
+{
+    // printf("doGetDiscussList start!!!\n");
+    Json::Value resjson;
+    if (!req.has_param("SearchInfo") || !req.has_param("Page") || !req.has_param("PageSize"))
+    {
+        resjson["Result"] = "400";
+        resjson["Reason"] = "缺少请求参数！";
+    }
+    else
+    {
+        Json::Value searchinfo;
+        Json::Reader reader;
+        // 解析传入的json
+        reader.parse(req.get_param_value("SearchInfo"), searchinfo);
+        string page = req.get_param_value("Page");
+        string pagesize = req.get_param_value("PageSize");
+        Json::Value queryjson;
+        queryjson["SearchInfo"] = searchinfo;
+        queryjson["Page"] = page;
+        queryjson["PageSize"] = pagesize;
+        resjson = control.SelectDiscussList(queryjson);
+    }
+    // printf("doGetDiscussList end!!!\n");
+    SetResponseStatus(resjson, res);
+    res.set_content(resjson.toStyledString(), "json");
+}
+
+void doGetDiscussListByAdmin(const httplib::Request &req, httplib::Response &res)
+{
+    // printf("doGetDiscussListByAdmin start!!!\n");
+    Json::Value resjson;
+    if (!req.has_param("Page") || !req.has_param("PageSize"))
+    {
+        resjson["Result"] = "400";
+        resjson["Reason"] = "缺少请求参数！";
+    }
+    else
+    {
+        string page = req.get_param_value("Page");
+        string pagesize = req.get_param_value("PageSize");
+        Json::Value queryjson;
+        queryjson["Page"] = page;
+        queryjson["PageSize"] = pagesize;
+        resjson = control.SelectDiscussListByAdmin(queryjson);
+    }
+    // printf("doGetDiscussListByAdmin end!!!\n");
+    SetResponseStatus(resjson, res);
+    res.set_content(resjson.toStyledString(), "json");
+}
+void doGetDiscuss(const httplib::Request &req, httplib::Response &res)
+{
+    // printf("doGetDiscuss start!!!\n");
+    Json::Value resjson;
+    if (!req.has_param("DiscussId"))
+    {
+        resjson["Result"] = "400";
+        resjson["Reason"] = "缺少请求参数！";
+    }
+    else
+    {
+        string discussid = req.get_param_value("DiscussId");
+        Json::Value queryjson;
+        queryjson["DiscussId"] = discussid;
+        resjson = control.SelectDiscuss(queryjson);
+    }
+    // printf("doGetDiscuss end!!!\n");
+    SetResponseStatus(resjson, res);
+    res.set_content(resjson.toStyledString(), "json");
+}
+
+void doSelectDiscussByEdit(const httplib::Request &req, httplib::Response &res)
+{
+    // printf("doSelectDiscussByEdit start!!!\n");
+    Json::Value resjson;
+    if (!req.has_param("DiscussId"))
+    {
+        resjson["Result"] = "400";
+        resjson["Reason"] = "缺少请求参数！";
+    }
+    else
+    {
+        string discussid = req.get_param_value("DiscussId");
+        Json::Value queryjson;
+        queryjson["DiscussId"] = discussid;
+        resjson = control.SelectDiscussByEdit(queryjson);
+    }
+    // printf("doSelectDiscussByEdit end!!!\n");
+    SetResponseStatus(resjson, res);
+    res.set_content(resjson.toStyledString(), "json");
+}
+
+void doInsertDiscuss(const httplib::Request &req, httplib::Response &res)
+{
+    // printf("doInsertSolution start!!!\n");
+    Json::Value jsonvalue;
+    Json::Reader reader;
+    // 解析传入的json
+    reader.parse(req.body, jsonvalue);
+    Json::Value resjson = control.InsertDiscuss(jsonvalue);
+    // printf("doInsertSolution end!!!\n");
+    SetResponseStatus(resjson, res);
+    res.set_content(resjson.toStyledString(), "json");
+}
+
+void doUpdateDiscuss(const httplib::Request &req, httplib::Response &res)
+{
+    // printf("doUpdateSolution start!!!\n");
+    Json::Value jsonvalue;
+    Json::Reader reader;
+    // 解析传入的json
+    reader.parse(req.body, jsonvalue);
+    Json::Value resjson = control.UpdateDiscuss(jsonvalue);
+    // printf("doUpdateSolution end!!!\n");
+    SetResponseStatus(resjson, res);
+    res.set_content(resjson.toStyledString(), "json");
+}
+
+void doDeleteDiscuss(const httplib::Request &req, httplib::Response &res)
+{
+    // printf("doDeleteDiscuss start!!!\n");
+    Json::Value resjson;
+
+    if (!req.has_param("DiscussId") || !req.has_param("UserId"))
+    {
+        resjson["Result"] = "400";
+        resjson["Reason"] = "缺少请求参数！";
+    }
+    else
+    {
+        string discussid = req.get_param_value("DiscussId");
+        string userid = req.get_param_value("UserId");
+
+        Json::Value deletejson;
+        deletejson["DiscussId"] = discussid;
+        deletejson["UserId"] = userid;
+        resjson = control.DeleteDiscuss(deletejson);
+    }
+    // printf("doDeleteDiscuss end!!!\n");
+    SetResponseStatus(resjson, res);
+    res.set_content(resjson.toStyledString(), "json");
+}
+
+// ------------------题解------------------------------
+void doGetSolutionList(const httplib::Request &req, httplib::Response &res)
+{
+    // printf("doGetSolutionList start!!!\n");
+    Json::Value resjson;
+
+    if (!req.has_param("SearchInfo") || !req.has_param("Page") || !req.has_param("PageSize"))
+    {
+        resjson["Result"] = "400";
+        resjson["Reason"] = "缺少请求参数！";
+    }
+    else
+    {
+        Json::Value searchinfo;
+        Json::Reader reader;
+        // 解析传入的json
+        reader.parse(req.get_param_value("SearchInfo"), searchinfo);
+        string page = req.get_param_value("Page");
+        string pagesize = req.get_param_value("PageSize");
+        Json::Value queryjson;
+        queryjson["SearchInfo"] = searchinfo;
+        queryjson["Page"] = page;
+        queryjson["PageSize"] = pagesize;
+        resjson = control.SelectSolutionList(queryjson);
+    }
+    // printf("doGetSolutionList end!!!\n");
+    SetResponseStatus(resjson, res);
+    res.set_content(resjson.toStyledString(), "json");
+}
+
+void doGetSolutionListByAdmin(const httplib::Request &req, httplib::Response &res)
+{
+    // printf("doGetSolutionListByAdmin start!!!\n");
+    Json::Value resjson;
+    if (!req.has_param("Page") || !req.has_param("PageSize"))
+    {
+        resjson["Result"] = "400";
+        resjson["Reason"] = "缺少请求参数！";
+    }
+    else
+    {
+        string page = req.get_param_value("Page");
+        string pagesize = req.get_param_value("PageSize");
+
+        Json::Value queryjson;
+        queryjson["Page"] = page;
+        queryjson["PageSize"] = pagesize;
+        resjson = control.SelectSolutionListByAdmin(queryjson);
+    }
+    // printf("doGetSolutionListByAdmin end!!!\n");
+    SetResponseStatus(resjson, res);
+    res.set_content(resjson.toStyledString(), "json");
+}
+void doGetSolution(const httplib::Request &req, httplib::Response &res)
+{
+    // printf("doGetSolution start!!!\n");
+    Json::Value resjson;
+
+    if (!req.has_param("SolutionId"))
+    {
+        resjson["Result"] = "400";
+        resjson["Reason"] = "缺少请求参数！";
+    }
+    else
+    {
+        string solutionid = req.get_param_value("SolutionId");
+        Json::Value queryjson;
+        queryjson["SolutionId"] = solutionid;
+        resjson = control.SelectSolution(queryjson);
+    }
+    // printf("doGetSolution end!!!\n");
+    SetResponseStatus(resjson, res);
+    res.set_content(resjson.toStyledString(), "json");
+}
+
+void doSelectSolutionByEdit(const httplib::Request &req, httplib::Response &res)
+{
+    // printf("doSelectSolutionByEdit start!!!\n");
+    Json::Value resjson;
+
+    if (!req.has_param("SolutionId"))
+    {
+        resjson["Result"] = "400";
+        resjson["Reason"] = "缺少请求参数！";
+    }
+    else
+    {
+        string solutionid = req.get_param_value("SolutionId");
+        Json::Value queryjson;
+        queryjson["SolutionId"] = solutionid;
+        resjson = control.SelectSolutionByEdit(queryjson);
+    }
+    // printf("doSelectSolutionByEdit end!!!\n");
+    SetResponseStatus(resjson, res);
+    res.set_content(resjson.toStyledString(), "json");
+}
+
+void doInsertSolution(const httplib::Request &req, httplib::Response &res)
+{
+    // printf("doInsertSolution start!!!\n");
+    Json::Value jsonvalue;
+    Json::Reader reader;
+    // 解析传入的json
+    reader.parse(req.body, jsonvalue);
+    Json::Value resjson = control.InsertSolution(jsonvalue);
+    // printf("doInsertSolution end!!!\n");
+    SetResponseStatus(resjson, res);
+    res.set_content(resjson.toStyledString(), "json");
+}
+
+void doUpdateSolution(const httplib::Request &req, httplib::Response &res)
+{
+    // printf("doUpdateSolution start!!!\n")
+    Json::Value jsonvalue;
+    Json::Reader reader;
+    // 解析传入的json
+    reader.parse(req.body, jsonvalue);
+    Json::Value resjson = control.UpdateSolution(jsonvalue);
+    // printf("doUpdateSolution end!!!\n");
+    SetResponseStatus(resjson, res);
+    res.set_content(resjson.toStyledString(), "json");
+}
+
+void doDeleteSolution(const httplib::Request &req, httplib::Response &res)
+{
+    // printf("doDeleteSolution start!!!\n");
+    Json::Value resjson;
+
+    if (!req.has_param("SolutionId") || !req.has_param("UserId"))
+    {
+        resjson["Result"] = "400";
+        resjson["Reason"] = "缺少请求参数！";
+    }
+    else
+    {
+        string solutionid = req.get_param_value("SolutionId");
+        string userid = req.get_param_value("UserId");
+        Json::Value deletejson;
+        deletejson["SolutionId"] = solutionid;
+        deletejson["UserId"] = userid;
+        resjson = control.DeleteSolution(deletejson);
+    }
+    // printf("doDeleteSolution end!!!\n");
+    SetResponseStatus(resjson, res);
+    res.set_content(resjson.toStyledString(), "json");
+}
+
+void doSelectCommentListByAdmin(const httplib::Request &req, httplib::Response &res)
+{
+    // printf("doSelectCommentListByAdmin start!!!\n");
+    Json::Value resjson;
+
+    if (!req.has_param("Page") || !req.has_param("PageSize"))
+    {
+        resjson["Result"] = "400";
+        resjson["Reason"] = "缺少请求参数！";
+    }
+    else
+    {
+        string page = req.get_param_value("Page");
+        string pagesize = req.get_param_value("PageSize");
+
+        Json::Value queryjson;
+        queryjson["Page"] = page;
+        queryjson["PageSize"] = pagesize;
+        resjson = control.SelectCommentListByAdmin(queryjson);
+    }
+    // printf("doSelectCommentListByAdmin end!!!\n");
+    SetResponseStatus(resjson, res);
+    res.set_content(resjson.toStyledString(), "json");
+}
+
+void doGetComment(const httplib::Request &req, httplib::Response &res)
+{
+    // printf("doGetComment start!!!\n");
+    Json::Value resjson;
+
+    if (!req.has_param("Type") || !req.has_param("ParentId") || !req.has_param("Page") || !req.has_param("PageSize") || !req.has_param("SonNum"))
+    {
+        resjson["Result"] = "400";
+        resjson["Reason"] = "缺少请求参数！";
+    }
+    else
+    {
+        string type = req.get_param_value("Type");
+        string parentid = req.get_param_value("ParentId");
+        string page = req.get_param_value("Page");
+        string pagesize = req.get_param_value("PageSize");
+        string sonsnum = req.get_param_value("SonNum");
+        Json::Value queryjson;
+        queryjson["Type"] = type;
+        queryjson["ParentId"] = parentid;
+        queryjson["Page"] = page;
+        queryjson["PageSize"] = pagesize;
+        queryjson["SonNum"] = sonsnum;
+        resjson = control.GetComment(queryjson);
+    }
+
+    // printf("doGetComment end!!!\n");
+    SetResponseStatus(resjson, res);
+    res.set_content(resjson.toStyledString(), "json");
+}
+
+void doInsertComment(const httplib::Request &req, httplib::Response &res)
+{
+    // printf("doInsertComment start!!!\n");
+    Json::Value jsonvalue;
+    Json::Reader reader;
+    // 解析传入的json
+    reader.parse(req.body, jsonvalue);
+    Json::Value resjson = control.InsertComment(jsonvalue["Info"]);
+    // printf("doInsertComment end!!!\n");
+    SetResponseStatus(resjson, res);
+    res.set_content(resjson.toStyledString(), "json");
+}
+void doDeleteComment(const httplib::Request &req, httplib::Response &res)
+{
+    // printf("doDeleteComment start!!!\n");
+    Json::Value resjson;
+    if (!req.has_param("ArticleId") || !req.has_param("CommentId"))
+    {
+        resjson["Result"] = "400";
+        resjson["Reason"] = "缺少请求参数！";
+    }
+    else
+    {
+        string articleid = req.get_param_value("ArticleId");
+        string commentid = req.get_param_value("CommentId");
+        Json::Value deletejson;
+        deletejson["ArticleId"] = articleid;
+        deletejson["CommentId"] = commentid;
+        resjson = control.DeleteComment(deletejson);
+    }
+    // printf("doDeleteComment end!!!\n");
+    SetResponseStatus(resjson, res);
     res.set_content(resjson.toStyledString(), "json");
 }
 
@@ -404,6 +932,83 @@ void HttpServer::Run()
 
     // 获取标签
     server.Get("/tags", doGetTags);
+
+    // --------------公告--------------------
+    // 获取公告列表
+    server.Get("/announcementlist", doGetAnnouncementList);
+
+    // 获取公告列表
+    server.Get("/announcementlist/admin", doGetAnnouncementListByAdmin);
+
+    // 获取公告内容
+    server.Get("/announcement", doGetAnnouncement);
+
+    // 获取公告信息用于编辑
+    server.Get("/announcement/select", doSelectAnnouncement);
+
+    // 用户提交公告
+    server.Post("/announcement/insert", doInsertAnnouncement);
+
+    // 用户修改公告
+    server.Post("/announcement/update", doUpdateAnnouncement);
+
+    // 用户删除公告
+    server.Delete("/announcement", doDeleteAnnouncement);
+
+        // -------------讨论------------------------
+    // 获取讨论列表
+    server.Get("/discusslist", doGetDiscussList);
+
+    // 管理员获取讨论列表
+    server.Get("/discusslist/admin", doGetDiscussListByAdmin);
+
+    // 获取讨论内容
+    server.Get("/discuss", doGetDiscuss);
+
+    // 获取讨论信息用于编辑
+    server.Get("/discuss/select", doSelectDiscussByEdit);
+
+    // 用户提交讨论
+    server.Post("/discuss/insert", doInsertDiscuss);
+
+    // 用户修改讨论
+    server.Post("/discuss/update", doUpdateDiscuss);
+
+    // 用户删除讨论
+    server.Delete("/discuss", doDeleteDiscuss);
+
+        // -------------题解------------------------
+    // 获取题解列表
+    server.Get("/solutionlist", doGetSolutionList);
+
+    // 获取题解列表
+    server.Get("/solutionlist/admin", doGetSolutionListByAdmin);
+
+    // 获取题解内容
+    server.Get("/solution", doGetSolution);
+
+    // 获取题解信息用于编辑
+    server.Get("/solution/select", doSelectSolutionByEdit);
+
+    // 用户题解公告
+    server.Post("/solution/insert", doInsertSolution);
+
+    // 用户修改题解
+    server.Post("/solution/update", doUpdateSolution);
+
+    // 用户删除题解
+    server.Delete("/solution", doDeleteSolution);
+
+    
+    // ---------------评论--------------------
+    // 管理员获取评论
+    server.Get("/commentlist/admin", doSelectCommentListByAdmin);
+    // 获取评论
+    server.Get("/comment", doGetComment);
+    // 提交评论
+    server.Post("/comment/insert", doInsertComment);
+    // 删除评论
+    server.Delete("/comment", doDeleteComment);
 
     // 设置静态资源
     server.set_base_dir("../WWW");

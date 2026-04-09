@@ -109,4 +109,226 @@ Json::Value Control::GetTags(Json::Value &queryjson)
     {
         return Tag::GetInstance()->getProblemTags();
     }
+
+}
+
+// --------------------公告------------------------
+Json::Value Control::SelectAnnouncementList(Json::Value &queryjson)
+{
+    return AnnouncementList::GetInstance()->SelectAnnouncementList(queryjson);
+}
+
+Json::Value Control::SelectAnnouncementListByAdmin(Json::Value &queryjson)
+{
+    return AnnouncementList::GetInstance()->SelectAnnouncementListByAdmin(queryjson);
+}
+
+Json::Value Control::SelectAnnouncement(Json::Value &queryjson)
+{
+    return AnnouncementList::GetInstance()->SelectAnnouncement(queryjson);
+}
+
+Json::Value Control::SelectAnnouncementByEdit(Json::Value &queryjson)
+{
+    return AnnouncementList::GetInstance()->SelectAnnouncementByEdit(queryjson);
+}
+
+Json::Value Control::InsertAnnouncement(Json::Value &insertjson)
+{
+    return AnnouncementList::GetInstance()->InsertAnnouncement(insertjson);
+}
+
+Json::Value Control::UpdateAnnouncement(Json::Value &updatejson)
+{
+    return AnnouncementList::GetInstance()->UpdateAnnouncement(updatejson);
+}
+
+Json::Value Control::DeleteAnnouncement(Json::Value &deletejson)
+{
+    Json::Value resjson = AnnouncementList::GetInstance()->DeleteAnnouncement(deletejson);
+
+    if (resjson["Result"].asString() == "Success")
+    {
+        Json::Value json;
+        json["ArticleId"] = deletejson["AnnouncementId"];
+        CommentList::GetInstance()->DeleteArticleComment(json);
+    }
+
+    return resjson;
+}
+
+// ----------------------讨论----------------------------
+Json::Value Control::SelectDiscussList(Json::Value &queryjson)
+{
+    return DiscussList::GetInstance()->SelectDiscussList(queryjson);
+}
+
+Json::Value Control::SelectDiscussListByAdmin(Json::Value &queryjson)
+{
+    return DiscussList::GetInstance()->SelectDiscussListByAdmin(queryjson);
+}
+
+Json::Value Control::SelectDiscuss(Json::Value &queryjson)
+{
+    return DiscussList::GetInstance()->SelectDiscuss(queryjson);
+}
+
+Json::Value Control::SelectDiscussByEdit(Json::Value &queryjson)
+{
+    return DiscussList::GetInstance()->SelectDiscussByEdit(queryjson);
+}
+
+Json::Value Control::InsertDiscuss(Json::Value &insertjson)
+{
+    return DiscussList::GetInstance()->InsertDiscuss(insertjson);
+}
+
+Json::Value Control::UpdateDiscuss(Json::Value &updatejson)
+{
+    return DiscussList::GetInstance()->UpdateDiscuss(updatejson);
+}
+
+Json::Value Control::DeleteDiscuss(Json::Value &deletejson)
+{
+    Json::Value resjson = DiscussList::GetInstance()->DeleteDiscuss(deletejson);
+
+    if (resjson["Result"].asString() == "Success")
+    {
+        Json::Value json;
+        json["ArticleId"] = deletejson["DiscussId"];
+        CommentList::GetInstance()->DeleteArticleComment(json);
+    }
+    return resjson;
+}
+
+// ----------------------题解----------------------------
+Json::Value Control::SelectSolutionList(Json::Value &queryjson)
+{
+    return SolutionList::GetInstance()->SelectSolutionList(queryjson);
+}
+
+Json::Value Control::SelectSolutionListByAdmin(Json::Value &queryjson)
+{
+    return SolutionList::GetInstance()->SelectSolutionListByAdmin(queryjson);
+}
+
+Json::Value Control::SelectSolution(Json::Value &queryjson)
+{
+    return SolutionList::GetInstance()->SelectSolution(queryjson);
+}
+
+Json::Value Control::SelectSolutionByEdit(Json::Value &queryjson)
+{
+    return SolutionList::GetInstance()->SelectSolutionByEdit(queryjson);
+}
+
+Json::Value Control::InsertSolution(Json::Value &insertjson)
+{
+    return SolutionList::GetInstance()->InsertSolution(insertjson);
+}
+
+Json::Value Control::UpdateSolution(Json::Value &updatejson)
+{
+    return SolutionList::GetInstance()->UpdateSolution(updatejson);
+}
+Json::Value Control::DeleteSolution(Json::Value &deletejson)
+{
+    Json::Value resjson = SolutionList::GetInstance()->DeleteSolution(deletejson);
+
+    if (resjson["Result"].asString() == "Success")
+    {
+        Json::Value json;
+        json["ArticleId"] = deletejson["SolutionId"];
+        CommentList::GetInstance()->DeleteArticleComment(json);
+    }
+    return resjson;
+}
+
+Json::Value Control::SelectCommentListByAdmin(Json::Value &queryjson)
+{
+    return CommentList::GetInstance()->SelectCommentListByAdmin(queryjson);
+}
+
+//获取评论
+Json::Value Control::GetComment(Json::Value &queryjson)
+{
+    if (queryjson["Type"].asString() == "Father")
+    {
+        return CommentList::GetInstance()->getFatherComment(queryjson);
+    }
+    else
+    {
+        return CommentList::GetInstance()->getSonComment(queryjson);
+    }
+}
+
+Json::Value Control::InsertComment(Json::Value &insertjson)
+{
+    // 文章添加评论数
+    Json::Value updatejson;
+    updatejson["ArticleId"] = insertjson["ArticleId"];
+    updatejson["Num"] = 1;
+    //更新每个类型的文章的评论数量
+    if (insertjson["ArticleType"].asString() == "Discuss")
+    {
+        DiscussList::GetInstance()->UpdateDiscussComments(updatejson);
+    }
+    else if (insertjson["ArticleType"].asString() == "Solution")
+    {
+        SolutionList::GetInstance()->UpdateSolutionComments(updatejson);
+    }
+    else if (insertjson["ArticleType"].asString() == "Announcement")
+    {
+        AnnouncementList::GetInstance()->UpdateAnnouncementComments(updatejson);
+    }
+
+    if (insertjson["Type"].asString() == "Father") // 父评论
+    {
+
+        return CommentList::GetInstance()->InsertFatherComment(insertjson);
+    }
+    else // 子评论
+    {
+        return CommentList::GetInstance()->InsertSonComment(insertjson);
+    }
+}
+
+// Json(ArticleId,CommentId)
+Json::Value Control::DeleteComment(Json::Value &deletejson)
+{
+    string articleid = deletejson["ArticleId"].asString();
+
+    Json::Value resjson;
+    // 删除父评论
+    Json::Value json = CommentList::GetInstance()->DeleteFatherComment(deletejson);
+    // 如果失败删除子评论
+    if (json["Result"] == "Fail")
+        json = CommentList::GetInstance()->DeleteSonComment(deletejson);
+    // 如果都失败，返回失败结果
+    if (json["Result"] == "Fail")
+    {
+        resjson["Result"] = "Fail";
+        resjson["Reason"] = "数据库未查询到数据！";
+        return resjson;
+    }
+    // 如果删除评论成功，更新文章的评论数量
+    Json::Value articlejson;
+    articlejson["Num"] = stoi(json["DeleteNum"].asString()) * -1;
+    articlejson["ArticleId"] = articleid;
+    string articletype = json["ArticleType"].asString();
+    if (articletype == "Discuss")
+    {
+        DiscussList::GetInstance()->UpdateDiscussComments(articlejson);
+    }
+    else if (articletype == "Solution")
+    {
+        SolutionList::GetInstance()->UpdateSolutionComments(articlejson);
+    }
+    else if (articletype == "Announcement")
+    {
+        AnnouncementList::GetInstance()->UpdateAnnouncementComments(articlejson);
+    }
+
+    resjson["Result"] = "Success";
+    return resjson;
 }

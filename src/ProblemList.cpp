@@ -79,6 +79,7 @@ Json::Value ProblemList::SelectProblem(Json::Value &queryjson)
     return MoDB::GetInstance()->SelectProblem(queryjson);
 }
 
+//创建对应题目文件夹
 bool InsertProblemDataInfo(Json::Value &insertjson)
 {
     // 添加测试用例

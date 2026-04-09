@@ -56,6 +56,86 @@ public:
 
     // 获取标签
     Json::Value GetTags(Json::Value &queryjson);
+
+    // ----------------------公告---------------------------
+    // 查询公告列表
+    Json::Value SelectAnnouncementList(Json::Value &queryjson);
+
+    // 管理员查询公告列表
+    Json::Value SelectAnnouncementListByAdmin(Json::Value &queryjson);
+
+    // 查询公告
+    Json::Value SelectAnnouncement(Json::Value &queryjson);
+
+    // 查询公告 进行编辑
+    Json::Value SelectAnnouncementByEdit(Json::Value &queryjson);
+
+    // 插入公告
+    Json::Value InsertAnnouncement(Json::Value &insertjson);
+
+    // 更新公告
+    Json::Value UpdateAnnouncement(Json::Value &updatejson);
+
+    // 删除公告
+    Json::Value DeleteAnnouncement(Json::Value &deletejson);
+
+        // ----------------------讨论-----------------------
+    // 查询讨论列表
+    Json::Value SelectDiscussList(Json::Value &queryjson);
+
+    // 管理员查询
+    Json::Value SelectDiscussListByAdmin(Json::Value &queryjson);
+
+    // 查询讨论
+    Json::Value SelectDiscuss(Json::Value &queryjson);
+
+    // 查询讨论进行编辑
+    Json::Value SelectDiscussByEdit(Json::Value &queryjson);
+
+    // 插入讨论
+    Json::Value InsertDiscuss(Json::Value &insertjson);
+
+    // 更新讨论
+    Json::Value UpdateDiscuss(Json::Value &updatejson);
+
+    // 删除讨论
+    Json::Value DeleteDiscuss(Json::Value &deletejson);
+
+        // ----------------------题解-----------------------
+    // 查询题解列表
+    Json::Value SelectSolutionList(Json::Value &queryjson);
+
+    // 管理员查询
+    Json::Value SelectSolutionListByAdmin(Json::Value &queryjson);
+
+    // 查询题解
+    Json::Value SelectSolution(Json::Value &queryjson);
+
+    // 查询题解进行编辑
+    Json::Value SelectSolutionByEdit(Json::Value &queryjson);
+
+    // 插入题解
+    Json::Value InsertSolution(Json::Value &insertjson);
+
+    // 更新题解
+    Json::Value UpdateSolution(Json::Value &updatejson);
+
+    // 删除题解
+    Json::Value DeleteSolution(Json::Value &deletejson);
+
+        // ---------------评论Comment-------------------
+
+    // 管理员查询评论
+    Json::Value SelectCommentListByAdmin(Json::Value &queryjson);
+
+    // 获取评论 根据Id
+    Json::Value GetComment(Json::Value &queryjson);
+
+    // 插入评论
+    Json::Value InsertComment(Json::Value &insertjson);
+
+    // 删除评论
+    Json::Value DeleteComment(Json::Value &deletejson);
 private:
 };
 
