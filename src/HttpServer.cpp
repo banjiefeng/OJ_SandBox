@@ -853,14 +853,12 @@ void doDeleteSolution(const httplib::Request &req, httplib::Response &res)
         deletejson["Token"] = GetRequestToken(req);
         resjson = control.DeleteSolution(deletejson);
     }
-    // printf("doDeleteSolution end!!!\n");
     SetResponseStatus(resjson, res);
     res.set_content(resjson.toStyledString(), "json");
 }
 
 void doSelectCommentListByAdmin(const httplib::Request &req, httplib::Response &res)
 {
-    // printf("doSelectCommentListByAdmin start!!!\n");
     Json::Value resjson;
 
     if (!req.has_param("Page") || !req.has_param("PageSize"))
@@ -1019,6 +1017,7 @@ void doPostCode(const httplib::Request &req, httplib::Response &res)
     // 解析传入的json
     reader.parse(req.body, jsonvalue);
     jsonvalue["Token"] = GetRequestToken(req);
+
     Json::Value resjson = control.GetJudgeCode(jsonvalue);
 
     SetResponseStatus(resjson, res);

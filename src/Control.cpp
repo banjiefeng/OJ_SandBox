@@ -416,7 +416,7 @@ Json::Value Control::GetJudgeCode(Json::Value judgejson)
     // 创建判题对象
     Judger judger;
     // Json::Value json = judger.Run(runjson);
-        
+
     Json::Value json = SandboxService::GetInstance()->submitTask(runjson);
 
     // 更新状态信息
