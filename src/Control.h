@@ -10,6 +10,10 @@ public:
     ~Control();
 
 // ----------------用户表 User-----------------
+    
+    // 登录用户通过Token
+    Json::Value LoginUserByToken(Json::Value &loginjson);
+    
     // 注册用户
     Json::Value RegisterUser(Json::Value &registerjson);
 
@@ -136,6 +140,16 @@ public:
 
     // 删除评论
     Json::Value DeleteComment(Json::Value &deletejson);
+
+        // ---------------测评表-------------------------
+    // 返回状态记录的信息
+    Json::Value SelectStatusRecordList(Json::Value &queryjson);
+
+    // 查询一条详细测评记录
+    Json::Value SelectStatusRecord(Json::Value &queryjson);
+
+    // 返回判题信息
+    Json::Value GetJudgeCode(Json::Value judgejson);
 private:
 };
 

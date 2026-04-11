@@ -76,7 +76,31 @@ Json::Value ProblemList::SelectProblemInfoByAdmin(Json::Value &queryjson)
 
 Json::Value ProblemList::SelectProblem(Json::Value &queryjson)
 {
-    return MoDB::GetInstance()->SelectProblem(queryjson);
+    string problemid = queryjson["ProblemId"].asString();
+
+    // 获取缓存
+    string resstr = ReDB::GetInstance()->GetProblemCache(problemid);
+
+    Json::Value resjson;
+    Json::Reader reader;
+    // 如果有缓存
+    if (resstr != "")
+    {
+        // 解析缓存json
+        reader.parse(resstr, resjson);
+
+        return resjson;
+    }
+    // 如果没有缓存
+    resjson = MoDB::GetInstance()->SelectProblem(queryjson);
+
+    // 添加缓存
+    if (resjson["Result"].asString() == "Success")
+    {
+        ReDB::GetInstance()->AddProblemCache(problemid, resjson.toStyledString());
+    }
+
+    return resjson;
 }
 
 //创建对应题目文件夹
@@ -149,6 +173,10 @@ Json::Value ProblemList::UpdateProblem(Json::Value &updatejson)
     system(command.data());
     // 创建文件夹
     InsertProblemDataInfo(updatejson);
+    
+    // UpdateProblem 函数
+    // 删除缓存
+    ReDB::GetInstance()->DeleteProblemCache(problemid);
 
     return tmpjson;
 }
@@ -165,7 +193,9 @@ Json::Value ProblemList::DeleteProblem(Json::Value &deletejson)
     string command = "rm -rf " + DATA_PATH;
 
     system(command.data());
-
+    // DeleteProblem 函数
+    // 删除缓存
+    ReDB::GetInstance()->DeleteProblemCache(deletejson["ProblemId"].asString());
     return tmpjson;
 }
 

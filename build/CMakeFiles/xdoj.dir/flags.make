@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/jinzheyu/graduate_design/./include -I/usr/local/include/mongocxx/v_noabi -I/usr/local/include/libmongoc-1.0 -I/usr/local/include/bsoncxx/v_noabi -I/usr/local/include/libbson-1.0
+CXX_INCLUDES = -I/home/jinzheyu/graduate_design/./include -I/home/jinzheyu/graduate_design/./CodeSandbox -I/home/jinzheyu/graduate_design/./CodeSandbox/languageRunners -I/home/jinzheyu/graduate_design/./CodeSandbox/sandboxRuntime -I/home/jinzheyu/graduate_design/./CodeSandbox/scheduler -I/home/jinzheyu/graduate_design/./CodeSandbox/service -I/home/jinzheyu/graduate_design/./CodeSandbox/workerPools -I/usr/local/include/mongocxx/v_noabi -I/usr/local/include/libmongoc-1.0 -I/usr/local/include/bsoncxx/v_noabi -I/usr/local/include/libbson-1.0 -I/home/jinzheyu/graduate_design/hiredis -I/home/jinzheyu/graduate_design/sw
 
 CXX_FLAGS = -std=gnu++17
 

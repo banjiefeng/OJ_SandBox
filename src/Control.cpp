@@ -8,13 +8,25 @@
 #include "AnnouncementList.h"
 #include "Tag.h"
 #include "Judger.h"
+#include "../CodeSandbox/service/SandboxService.hpp"
 #include <iostream>
+
 using namespace std;
+
+// 无权限
+static Json::Value NoPermission;
 
 Control::Control()
 {
     // 初始化题目标签
     Tag::GetInstance()->InitProblemTags();
+    
+    // 初始化用户权限
+    UserList::GetInstance()->InitUserAuthority();
+
+    // 初始化返回变量
+    NoPermission["Result"] = "401";
+    NoPermission["Reason"] = "无权限";
 }
 
 Control::~Control()
@@ -44,11 +56,18 @@ Json::Value Control::SelectUserInfo(Json::Value &queryjson)
 
 Json::Value Control::UpdateUserInfo(Json::Value &updatejson)
 {
+    // 如果不是本人或者管理员 无权修改
+    if (!UserList::GetInstance()->IsAuthor(updatejson))
+        return NoPermission;
+
     return UserList::GetInstance()->UpdateUserInfo(updatejson);
 }
 
 Json::Value Control::SelectUserUpdateInfo(Json::Value &queryjson)
 {
+        // 如果不是本人或者管理员 无权修改
+    if (!UserList::GetInstance()->IsAuthor(queryjson))
+        return NoPermission;
     return UserList::GetInstance()->SelectUserUpdateInfo(queryjson);
 }
 
@@ -185,11 +204,19 @@ Json::Value Control::InsertDiscuss(Json::Value &insertjson)
 
 Json::Value Control::UpdateDiscuss(Json::Value &updatejson)
 {
+    // 如果不是本人或者管理员 无权修改
+    if (!UserList::GetInstance()->IsAuthor(updatejson))
+        return NoPermission;
+
     return DiscussList::GetInstance()->UpdateDiscuss(updatejson);
 }
 
 Json::Value Control::DeleteDiscuss(Json::Value &deletejson)
 {
+    // 如果不是本人或者管理员 无权修改
+    if (!UserList::GetInstance()->IsAuthor(deletejson))
+        return NoPermission;
+
     Json::Value resjson = DiscussList::GetInstance()->DeleteDiscuss(deletejson);
 
     if (resjson["Result"].asString() == "Success")
@@ -229,10 +256,18 @@ Json::Value Control::InsertSolution(Json::Value &insertjson)
 
 Json::Value Control::UpdateSolution(Json::Value &updatejson)
 {
+    // 如果不是本人或者管理员 无权修改
+    if (!UserList::GetInstance()->IsAuthor(updatejson))
+        return NoPermission;
+
     return SolutionList::GetInstance()->UpdateSolution(updatejson);
 }
 Json::Value Control::DeleteSolution(Json::Value &deletejson)
 {
+    // 如果不是本人或者管理员 无权修改
+    if (!UserList::GetInstance()->IsAuthor(deletejson))
+        return NoPermission;
+
     Json::Value resjson = SolutionList::GetInstance()->DeleteSolution(deletejson);
 
     if (resjson["Result"].asString() == "Success")
@@ -331,4 +366,86 @@ Json::Value Control::DeleteComment(Json::Value &deletejson)
 
     resjson["Result"] = "Success";
     return resjson;
+}
+
+Json::Value Control::SelectStatusRecordList(Json::Value &queryjson)
+{
+    return StatusRecordList::GetInstance()->SelectStatusRecordList(queryjson);
+}
+
+Json::Value Control::SelectStatusRecord(Json::Value &queryjson)
+{
+    return StatusRecordList::GetInstance()->SelectStatusRecord(queryjson);
+}
+
+Json::Value Control::GetJudgeCode(Json::Value judgejson)
+{
+    Json::Value resjson;
+    // 传入Json(ProblemId,UserId,UserNickName,Code,Language,TimeLimit,MemoryLimit,JudgeNum,ProblemTitle)
+
+    // 添加状态记录
+    // 传入：Json(ProblemId,UserId,UserNickName,ProblemTitle,Language,Code);
+    Json::Value insertjson;
+    insertjson["ProblemId"] = judgejson["ProblemId"];
+    insertjson["UserId"] = judgejson["UserId"];
+    insertjson["UserNickName"] = judgejson["UserNickName"];
+    insertjson["ProblemTitle"] = judgejson["ProblemTitle"];
+    insertjson["Language"] = judgejson["Language"];
+    insertjson["Code"] = judgejson["Code"];
+
+    string submitid = StatusRecordList::GetInstance()->InsertStatusRecord(insertjson);
+
+    if (submitid == "0")
+    {
+        resjson["Result"] = "Fail";
+        resjson["Reason"] = "系统出错！";
+        return resjson;
+    }
+
+    // 运行代码
+    // Json(SubmitId,ProblemId,JudgeNum,Code,Language,TimeLimit,MemoryLimit)
+    Json::Value runjson;
+    runjson["Code"] = judgejson["Code"];
+    runjson["SubmitId"] = submitid;
+    runjson["ProblemId"] = judgejson["ProblemId"];
+    runjson["Language"] = judgejson["Language"];
+    runjson["JudgeNum"] = judgejson["JudgeNum"];
+    runjson["TimeLimit"] = judgejson["TimeLimit"];
+    runjson["MemoryLimit"] = judgejson["MemoryLimit"];
+
+    // 创建判题对象
+    Judger judger;
+    // Json::Value json = judger.Run(runjson);
+        
+    Json::Value json = SandboxService::GetInstance()->submitTask(runjson);
+
+    // 更新状态信息
+    /*
+        传入：Json(SubmitId,Status,RunTime,RunMemory,Length,ComplierInfo,
+        TestInfo[(Status,StandardOutput,PersonalOutput,RunTime,RunMemory)])
+    */
+    StatusRecordList::GetInstance()->UpdateStatusRecord(json);
+    // 更新题目的状态
+    Json::Value updatejson;
+    updatejson["ProblemId"] = judgejson["ProblemId"];
+    updatejson["Status"] = json["Status"];
+    ProblemList::GetInstance()->UpdateProblemStatusNum(updatejson);
+
+    updatejson["UserId"] = judgejson["UserId"];
+
+    // 更新用户的状态
+    if (UserList::GetInstance()->UpdateUserProblemInfo(updatejson))
+        resjson["IsFirstAC"] = true;
+    else
+        resjson["IsFirstAC"] = false;
+
+    resjson["Result"] = "Success";
+    resjson["Status"] = json["Status"];
+    resjson["ComplierInfo"] = json["ComplierInfo"];
+    return resjson;
+}
+
+Json::Value Control::LoginUserByToken(Json::Value &loginjson)
+{
+    return UserList::GetInstance()->LoginUserByToken(loginjson);
 }

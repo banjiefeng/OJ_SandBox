@@ -2801,7 +2801,7 @@ Json::Value MoDB::DeleteFatherComment(Json::Value &deletejson)
     catch (const std::exception &e)
     {
         resjson["Result"] = "500";
-        resjson["Reason"] = "数据库异常！";
+        resjson["Reason"] = "数据库异常";
         return resjson;
     }
 }
@@ -2856,6 +2856,369 @@ Json::Value MoDB::DeleteSonComment(Json::Value &deletejson)
         resjson["Result"] = "Success";
         resjson["DeleteNum"] = 1;
         resjson["ArticleType"] = articletype;
+        return resjson;
+    }
+    catch (const std::exception &e)
+    {
+        resjson["Result"] = "500";
+        resjson["Reason"] = "数据库异常！";
+        return resjson;
+    }
+}
+
+/*
+    功能：插入待测评记录
+    传入：Json(ProblemId,UserId,UserNickName,ProblemTitle,Language,Code)
+    传出：SubmitId测评的ID
+*/
+string MoDB::InsertStatusRecord(Json::Value &insertjson)
+{
+    try
+    {
+        int64_t id = ++m_statusrecordid;
+        int64_t problemid = stoll(insertjson["ProblemId"].asString());
+        int64_t userid = stoll(insertjson["UserId"].asString());
+        string usernickname = insertjson["UserNickName"].asString();
+        string problemtitle = insertjson["ProblemTitle"].asString();
+        string language = insertjson["Language"].asString();
+        string code = insertjson["Code"].asString();
+
+        auto client = pool.acquire();
+        mongocxx::collection statusrecordcoll = (*client)["XDOJ"]["StatusRecord"];
+        bsoncxx::builder::stream::document document{};
+
+        document
+            << "_id" << id
+            << "ProblemId" << problemid
+            << "UserId" << userid
+            << "UserNickName" << usernickname.data()
+            << "ProblemTitle" << problemtitle.data()
+            << "Status" << 0
+            << "RunTime"
+            << "0MS"
+            << "RunMemory"
+            << "0MB"
+            << "Length"
+            << "0B"
+            << "Language" << language.data()
+            << "SubmitTime" << GetTime().data()
+            << "Code" << code.data()
+            << "ComplierInfo"
+            << ""
+            << "TestInfo" << open_array << close_array;
+        statusrecordcoll.insert_one(document.view());
+        return to_string(id);
+    }
+    catch (const std::exception &e)
+    {
+        return "0";
+    }
+}
+
+/*
+    功能：更新测评记录
+    传入：Json(SubmitId,Status,RunTime,RunMemory,Length,ComplierInfo,
+    TestInfo[(Status,StandardInput,StandardOutput,PersonalOutput,RunTime,RunMemory)])
+    传出：bool
+*/
+bool MoDB::UpdateStatusRecord(Json::Value &updatejson)
+{
+    Json::Value resjson;
+    try
+    {
+        int64_t submitid = stoll(updatejson["SubmitId"].asString());
+        int status = stoi(updatejson["Status"].asString());
+        string runtime = updatejson["RunTime"].asString();
+        string runmemory = updatejson["RunMemory"].asString();
+        string length = updatejson["Length"].asString();
+        string complierinfo = updatejson["ComplierInfo"].asString();
+
+        // 更新测评记录
+        auto client = pool.acquire();
+        mongocxx::collection statusrecordcoll = (*client)["XDOJ"]["StatusRecord"];
+        bsoncxx::builder::stream::document document{};
+        auto in_array = document
+                        << "$set" << open_document
+                        << "Status" << status
+                        << "RunTime" << runtime.data()
+                        << "RunMemory" << runmemory.data()
+                        << "Length" << length.data()
+                        << "ComplierInfo" << complierinfo.data()
+                        << "TestInfo" << open_array;
+
+        for (int i = 0; i < updatejson["TestInfo"].size(); i++)
+        {
+            int teststatus = stoi(updatejson["TestInfo"][i]["Status"].asString());
+            string standardinput = updatejson["TestInfo"][i]["StandardInput"].asString();
+            string standardoutput = updatejson["TestInfo"][i]["StandardOutput"].asString();
+            string personaloutput = updatejson["TestInfo"][i]["PersonalOutput"].asString();
+            string testruntime = updatejson["TestInfo"][i]["RunTime"].asString();
+            string testrunmemory = updatejson["TestInfo"][i]["RunMemory"].asString();
+            in_array = in_array << open_document
+                                << "Status" << teststatus
+                                << "StandardInput" << standardinput
+                                << "StandardOutput" << standardoutput
+                                << "PersonalOutput" << personaloutput
+                                << "RunTime" << testruntime
+                                << "RunMemory" << testrunmemory << close_document;
+        }
+        bsoncxx::document::value doc = in_array << close_array << close_document << finalize;
+
+        statusrecordcoll.update_one({make_document(kvp("_id", submitid))}, doc.view());
+
+        return true;
+    }
+    catch (const std::exception &e)
+    {
+        return false;
+    }
+}
+
+/*
+    功能：分页查询测评记录
+    传入：Json(SearchInfo(ProblemId,UserId,ProblemTitle,Status,Language),PageSize,Page)
+    传出：Json(Result,Reason,ArrayInfo[(_id,ProbleId,UserId,UserNickName,ProblemTitle,Status,
+                RunTime,RunMemory,Length,Language,SubmitTime)],TotalNum)
+*/
+Json::Value MoDB::SelectStatusRecordList(Json::Value &queryjson)
+{
+    Json::Value resjson;
+    try
+    {
+        Json::Value searchinfo = queryjson["SearchInfo"];
+        int page = stoi(queryjson["Page"].asString());
+        int pagesize = stoi(queryjson["PageSize"].asString());
+        int skip = (page - 1) * pagesize;
+
+        Json::Reader reader;
+        mongocxx::pipeline pipe, pipetot;
+        bsoncxx::builder::stream::document document{};
+        auto client = pool.acquire();
+        mongocxx::collection statusrecordcoll = (*client)["XDOJ"]["StatusRecord"];
+
+        // 查询题目ID
+        if (searchinfo["ProblemId"].asString().size() > 0)
+        {
+            int64_t problemid = mystoll(searchinfo["ProblemId"].asString());
+            pipe.match({{make_document(kvp("ProblemId", problemid))}});
+            pipetot.match({{make_document(kvp("ProblemId", problemid))}});
+        }
+        // 查询用户ID
+        if (searchinfo["UserId"].asString().size() > 0)
+        {
+            int64_t userid = stoll(searchinfo["UserId"].asString());
+            pipe.match({{make_document(kvp("UserId", userid))}});
+            pipetot.match({{make_document(kvp("UserId", userid))}});
+        }
+
+        // 查询题目标题
+        if (searchinfo["ProblemTitle"].asString().size() > 0)
+        {
+            document
+                << "ProblemTitle" << open_document
+                << "$regex" << searchinfo["ProblemTitle"].asString()
+                << close_document;
+            pipe.match(document.view());
+            pipetot.match(document.view());
+            document.clear();
+        }
+
+        // 查询状态
+        if (searchinfo["Status"].asString().size() > 0)
+        {
+            int status = stoi(searchinfo["Status"].asString());
+            pipe.match({{make_document(kvp("Status", status))}});
+            pipetot.match({{make_document(kvp("Status", status))}});
+        }
+
+        // 查询语言
+        if (searchinfo["Language"].asString().size() > 0)
+        {
+            string language = searchinfo["Language"].asString();
+            pipe.match({{make_document(kvp("Language", language))}});
+            pipetot.match({{make_document(kvp("Language", language))}});
+        }
+        // 获取总条数
+        pipetot.count("TotalNum");
+        mongocxx::cursor cursor = statusrecordcoll.aggregate(pipetot);
+        for (auto doc : cursor)
+        {
+            reader.parse(bsoncxx::to_json(doc), resjson);
+        }
+
+        // 排序
+        pipe.sort({make_document(kvp("SubmitTime", -1))});
+        // 跳过
+        pipe.skip(skip);
+        // 限制
+        pipe.limit(pagesize);
+
+        document
+            << "ProbleId" << 1
+            << "UserId" << 1
+            << "UserNickName" << 1
+            << "ProblemTitle" << 1
+            << "Status" << 1
+            << "RunTime" << 1
+            << "RunMemory" << 1
+            << "Length" << 1
+            << "Language" << 1
+            << "SubmitTime" << 1;
+        pipe.project(document.view());
+        Json::Value arryjson;
+        cursor = statusrecordcoll.aggregate(pipe);
+        for (auto doc : cursor)
+        {
+            Json::Value jsonvalue;
+            reader.parse(bsoncxx::to_json(doc), jsonvalue);
+            arryjson.append(jsonvalue);
+        }
+        resjson["ArrayInfo"] = arryjson;
+        return resjson;
+    }
+    catch (const std::exception &e)
+    {
+        resjson["Result"] = "500";
+        resjson["Reason"] = "数据库异常！";
+        return resjson;
+    }
+}
+
+/*
+    功能：查询测评记录
+    传入：Json(SubmitId)
+    传出：全部记录，详情请看MongoDB集合表
+*/
+Json::Value MoDB::SelectStatusRecord(Json::Value &queryjson)
+{
+    Json::Value resjson;
+    try
+    {
+        int64_t submitid = stoll(queryjson["SubmitId"].asString());
+        auto client = pool.acquire();
+        mongocxx::collection statusrecordcoll = (*client)["XDOJ"]["StatusRecord"];
+
+        mongocxx::pipeline pipe;
+        bsoncxx::builder::stream::document document{};
+
+        pipe.match({make_document(kvp("_id", submitid))});
+
+        document
+            << "Status" << 1
+            << "Language" << 1
+            << "Code" << 1
+            << "ComplierInfo" << 1
+            << "TestInfo" << 1;
+
+        pipe.project(document.view());
+        // 查询测评记录
+        Json::Reader reader;
+
+        mongocxx::cursor cursor = statusrecordcoll.aggregate(pipe);
+        for (auto doc : cursor)
+        {
+            reader.parse(bsoncxx::to_json(doc), resjson);
+        }
+        resjson["Result"] = "Success";
+
+        return resjson;
+    }
+    catch (const std::exception &e)
+    {
+        resjson["Result"] = "500";
+        resjson["Reason"] = "数据库异常！";
+        return resjson;
+    }
+}
+
+/*
+    功能：用户登录通过Token
+    传入：Json(UserId)
+    传出：Json(Result,Reason,Info(_id,NickName,Avatar,CommentLikes,Solves,Authority))
+*/
+Json::Value MoDB::LoginUserByToken(Json::Value &loginjson)
+{
+    Json::Value resjson;
+    try
+    {
+        int64_t userid = stoll(loginjson["UserId"].asString());
+        auto client = pool.acquire();
+        mongocxx::collection usercoll = (*client)["XDOJ"]["User"];
+
+        mongocxx::pipeline pipe;
+        bsoncxx::builder::stream::document document{};
+        document
+            << "_id" << userid;
+        pipe.match(document.view());
+
+        document.clear();
+        document
+            << "Avatar" << 1
+            << "NickName" << 1
+            << "CommentLikes" << 1
+            << "Solves" << 1
+            << "Authority" << 1;
+
+        pipe.project(document.view());
+
+        mongocxx::cursor cursor = usercoll.aggregate(pipe);
+        // 匹配失败
+        if (cursor.begin() == cursor.end())
+        {
+            resjson["Result"] = "Fail";
+            resjson["Reason"] = "用户ID错误！";
+            return resjson;
+        }
+        // 匹配成功
+        Json::Reader reader;
+        for (auto doc : cursor)
+        {
+            Json::Value jsonvalue;
+            reader.parse(bsoncxx::to_json(doc), jsonvalue);
+            resjson["Info"] = jsonvalue;
+        }
+        resjson["Result"] = "Success";
+        return resjson;
+    }
+    catch (const std::exception &e)
+    {
+        resjson["Result"] = "500";
+        resjson["Reason"] = "数据库异常！";
+        return resjson;
+    }
+}
+
+/*
+    功能：查询所有用户的权限
+    传入：void
+    传出：Json(Result,_id,Authority)
+*/
+Json::Value MoDB::SelectUserAuthority()
+{
+    Json::Value resjson;
+    try
+    {
+        auto client = pool.acquire();
+        mongocxx::collection usercoll = (*client)["XDOJ"]["User"];
+
+        bsoncxx::builder::stream::document document{};
+        mongocxx::pipeline pipe;
+
+        document
+            << "Authority" << 1;
+
+        pipe.project(document.view());
+        Json::Reader reader;
+
+        mongocxx::cursor cursor = usercoll.aggregate(pipe);
+
+        for (auto doc : cursor)
+        {
+            Json::Value jsonvalue;
+            reader.parse(bsoncxx::to_json(doc), jsonvalue);
+            resjson["ArrayInfo"].append(jsonvalue);
+        }
+        resjson["Result"] = "Success";
         return resjson;
     }
     catch (const std::exception &e)

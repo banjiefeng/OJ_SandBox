@@ -373,6 +373,52 @@ public:
     */
     Json::Value DeleteSonComment(Json::Value &deletejson);
 
+        // ++++++++++++++++++++++++评测表StatusRecord+++++++++++++++++++++++++
+
+    /*
+        功能：插入待测评记录
+        传入：Json(ProblemId,UserId,UserNickName,ProblemTitle,Language,Code)
+        传出：SubmitId测评的ID
+    */
+    std::string InsertStatusRecord(Json::Value &insertjson);
+
+    /*
+        功能：更新测评记录
+        传入：Json(SubmitId,Status,RunTime,RunMemory,Length,ComplierInfo,
+        TestInfo[(Status,StandardInput,StandardOutput,PersonalOutput,RunTime,RunMemory)])
+        传出：bool
+    */
+    bool UpdateStatusRecord(Json::Value &updatejson);
+
+    /*
+        功能：分页查询测评记录
+        传入：Json(SearchInfo,PageSize,Page)
+        传出：测评全部信息，详情请见MongoDB集合表
+    */
+    Json::Value SelectStatusRecordList(Json::Value &queryjson);
+
+    /*
+        功能：查询测评记录
+        传入：Json(SubmitId)
+        传出：全部记录，详情请看MongoDB集合表
+    */
+    Json::Value SelectStatusRecord(Json::Value &queryjson);
+
+    // +++++++++++++++++ Token ++++++++++++++++++++++++++++
+    /*
+        功能：用户登录通过Token
+        传入：Json(UserId)
+        传出：Json(Result,Reason,Info(_id,NickName,Avatar,CommentLikes,Solves,Authority))
+    */
+    Json::Value LoginUserByToken(Json::Value &loginjson);
+
+    /*
+        功能：查询所有用户的权限
+        传入：void
+        传出：Json(Result,_id,Authority)
+    */
+    Json::Value SelectUserAuthority();
+    
 private:
     /*
         功能：获取某一个集合中最大的ID
@@ -391,7 +437,7 @@ private:
     std::atomic_int64_t m_problemid;      // 题目ID
     std::atomic_int64_t m_statusrecordid; // 测评ID
     std::atomic_int64_t m_commentid;      // 评论ID
-    
+
     //将讨论、公告、题解模块使用统一的文章id方便进行评论的统一管理
     std::atomic_int64_t m_articleid;      // 文章ID
 };
